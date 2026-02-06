@@ -14,6 +14,8 @@ func main() {
 
 	r.GET("/building/:id", handlers.GetBuildingByID)
 
+	r.POST("/building", handlers.CreateNewBuilding)
+
 	//сервер
 	if err := r.Run(":8080"); err != nil {
 		panic(err)
