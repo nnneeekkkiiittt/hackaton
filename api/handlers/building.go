@@ -93,13 +93,15 @@ func DeleteTheBuilding(c *gin.Context) {
 		return
 	}
 
-	for i, b := range mock_buildings {
-		if b.ID == uint(id) {
-			mock_buildings = append(mock_buildings[:i], mock_buildings[i+1:]...)
-			c.JSON(http.StatusOK, b)
-			return
-		}
+	var building models.Building
+
+	result := db.DB.First(&building, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": result.Error.Error()})
+		return
 	}
 
-	c.JSON(http.StatusNotFound, gin.H{"error": "building not found"})
+	db.DB.Delete(&building)
+
+	c.JSON(http.StatusOK, building)
 }
