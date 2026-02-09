@@ -16,6 +16,10 @@ func main() {
 
 	r.POST("/building", handlers.CreateNewBuilding)
 
+	r.PUT("/building/:id", handlers.UpdateTheBuilding)
+
+	r.DELETE("/building/:id", handlers.DeleteTheBuilding)
+
 	//сервер
 	if err := r.Run(":8080"); err != nil {
 		panic(err)

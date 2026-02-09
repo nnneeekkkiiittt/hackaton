@@ -45,3 +45,57 @@ func CreateNewBuilding(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, newBuilding)
 }
+
+func UpdateTheBuilding(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "invalid ID"})
+		return
+	}
+
+	var building *models.Building
+
+	for i, b := range mock_buildings {
+		if b.ID == uint(id) {
+			building = &mock_buildings[i]
+			break
+		}
+	}
+
+	if building == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "building not found"})
+	}
+
+	var updatedBuilding models.Building
+	if err := c.ShouldBindJSON(&updatedBuilding); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	building.Name = updatedBuilding.Name
+	building.Description = updatedBuilding.Description
+	building.Latitude = updatedBuilding.Latitude
+	building.Longtitude = updatedBuilding.Longtitude
+	building.VideoURL = updatedBuilding.VideoURL
+
+	c.JSON(http.StatusOK, building)
+
+}
+
+func DeleteTheBuilding(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "invalid ID"})
+		return
+	}
+
+	for i, b := range mock_buildings {
+		if b.ID == uint(id) {
+			mock_buildings = append(mock_buildings[:i], mock_buildings[i+1:]...)
+			c.JSON(http.StatusOK, b)
+			return
+		}
+	}
+
+	c.JSON(http.StatusNotFound, gin.H{"error": "building not found"})
+}
