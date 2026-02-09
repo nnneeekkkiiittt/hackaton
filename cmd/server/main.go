@@ -2,12 +2,23 @@ package main
 
 import (
 	"hackaton/api/handlers"
+	"hackaton/db"
+	"hackaton/internal/models"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	r := gin.Default()
+
+	db.ConnectToDatabase()
+
+	err := db.DB.AutoMigrate(&models.Building{})
+
+	if err != nil {
+		log.Fatalf("Error migrating database: %v", err)
+	}
 
 	//маршруты
 	r.GET("/buildings", handlers.GetBuildings)

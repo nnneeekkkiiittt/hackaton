@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"hackaton/db"
 	"hackaton/internal/models"
 	"net/http"
 	"strconv"
@@ -9,12 +10,20 @@ import (
 )
 
 var mock_buildings = []models.Building{
-	{ID: 1, Name: "Coliseum", Description: "Tremendous arena", Latitude: 41.89002, Longtitude: 12.4925, VideoURL: "http://example.com/video1"},
-	{ID: 2, Name: "Eiffel Tower", Description: "The renowned tower in Paris", Latitude: 48.858, Longtitude: 2.2945, VideoURL: "http://example.com/video2"},
+	{ID: 1, Name: "Coliseum", Description: "Tremendous arena", Latitude: 41.89002, Longitude: 12.4925, VideoURL: "http://example.com/video1"},
+	{ID: 2, Name: "Eiffel Tower", Description: "The renowned tower in Paris", Latitude: 48.858, Longitude: 2.2945, VideoURL: "http://example.com/video2"},
 }
 
 func GetBuildings(c *gin.Context) {
-	c.JSON(http.StatusOK, mock_buildings)
+	var buildings []models.Building
+
+	result := db.DB.Find(&buildings)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, buildings)
 }
 
 func GetBuildingByID(c *gin.Context) {
@@ -23,14 +32,16 @@ func GetBuildingByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"message": "invalid ID"})
 		return
 	}
-	for _, b := range mock_buildings {
-		if b.ID == uint(id) {
-			c.JSON(http.StatusOK, b)
-			return
-		}
+
+	var building models.Building
+
+	result := db.DB.First(&building, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": result.Error.Error()})
+		return
 	}
 
-	c.JSON(404, gin.H{"message": "Building not found"})
+	c.JSON(http.StatusOK, building)
 }
 
 func CreateNewBuilding(c *gin.Context) {
@@ -41,7 +52,11 @@ func CreateNewBuilding(c *gin.Context) {
 		return
 	}
 
-	mock_buildings = append(mock_buildings, newBuilding)
+	result := db.DB.Create(&newBuilding)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
 
 	c.JSON(http.StatusCreated, newBuilding)
 }
@@ -53,30 +68,19 @@ func UpdateTheBuilding(c *gin.Context) {
 		return
 	}
 
-	var building *models.Building
-
-	for i, b := range mock_buildings {
-		if b.ID == uint(id) {
-			building = &mock_buildings[i]
-			break
-		}
+	var building models.Building
+	result := db.DB.First(&building, id)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "not found"})
+		return
 	}
 
-	if building == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "building not found"})
-	}
-
-	var updatedBuilding models.Building
-	if err := c.ShouldBindJSON(&updatedBuilding); err != nil {
+	if err := c.ShouldBindJSON(&building); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	building.Name = updatedBuilding.Name
-	building.Description = updatedBuilding.Description
-	building.Latitude = updatedBuilding.Latitude
-	building.Longtitude = updatedBuilding.Longtitude
-	building.VideoURL = updatedBuilding.VideoURL
+	db.DB.Save(&building)
 
 	c.JSON(http.StatusOK, building)
 
