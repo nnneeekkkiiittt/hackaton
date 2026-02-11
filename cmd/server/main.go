@@ -14,7 +14,7 @@ func main() {
 
 	db.ConnectToDatabase()
 
-	err := db.DB.AutoMigrate(&models.Building{})
+	err := db.DB.AutoMigrate(&models.Building{}, &models.User{}, &models.Progress{})
 
 	if err != nil {
 		log.Fatalf("Error migrating database: %v", err)
@@ -30,6 +30,16 @@ func main() {
 	r.PUT("/building/:id", handlers.UpdateTheBuilding)
 
 	r.DELETE("/building/:id", handlers.DeleteTheBuilding)
+
+	r.PUT("/progress/:user_id/:building_id", handlers.MarkTheBuildingVisited)
+
+	r.POST("/user", handlers.AddNewUser)
+
+	r.GET("/users", handlers.GetAllUsers)
+
+	r.PUT("/user/:id", handlers.UpdateUser)
+
+	r.DELETE("/user/:id", handlers.DeleteUser)
 
 	//сервер
 	if err := r.Run(":8080"); err != nil {
