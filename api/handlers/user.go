@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"fmt"
 	"hackaton/db"
 	"hackaton/internal/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,6 +36,7 @@ func AddNewUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, new_user)
+	fmt.Println("Received new user:", new_user)
 }
 
 func GetAllUsers(c *gin.Context) {
@@ -47,12 +50,27 @@ func GetAllUsers(c *gin.Context) {
 }
 
 func DeleteUser(c *gin.Context) {
-	userID := c.Param("id")
+	userID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 	result := db.DB.Delete(&models.User{}, userID)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
+
+	var buildings []models.Progress
+
+	result = db.DB.Where("user_id = ?", userID).Find(&buildings)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	result = db.DB.Delete(buildings)
+
 	c.JSON(http.StatusNoContent, gin.H{"message": "User deleted"})
 }
 

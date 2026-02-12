@@ -40,3 +40,20 @@ func MarkTheBuildingVisited(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "building marked as visited"})
 }
+
+func GetUserProgress(c *gin.Context) {
+	user_id, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "user not found"})
+		return
+	}
+
+	var progress []models.Progress
+	result := db.DB.Where("user_id = ?", user_id).Find(&progress)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, progress)
+}
