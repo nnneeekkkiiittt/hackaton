@@ -1,103 +1,181 @@
-document.addEventListener("DOMContentLoaded", function() {
-    const registrationForm = document.getElementById("registrationForm");
+const API_BASE = "http://localhost:8080";
 
-    // Обработчик отправки формы регистрации
-    registrationForm.addEventListener("submit", function(e) {
-        e.preventDefault();  // Предотвращаем стандартное поведение формы
-
-        // Получаем данные из формы
-        const username = document.getElementById("username").value;
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-
-        // Формируем объект с данными пользователя
-        const userData = {
-            username: username,
-            email: email,
-            password: password
-        };
-
-        // Отправляем запрос на сервер для регистрации пользователя
-        fetch('http://localhost:8080/user', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("User created:", data);  // Логируем информацию о новом пользователе
-            localStorage.setItem("user", JSON.stringify(data));  // Сохраняем пользователя в localStorage
-            displayUserInfo(data);  // Отображаем информацию о пользователе
-            fetchUserProgress(data.id);  // Загружаем прогресс для нового пользователя
-        })
-        .catch(error => {
-            console.error('Error during registration:', error);
-            alert("Error during registration");
-        });
-    });
-
-    // Проверяем, есть ли пользователь в localStorage
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-        displayUserInfo(user);  // Если есть, отображаем его данные
-        fetchUserProgress(user.id);  // Загружаем прогресс
-    } else {
-        alert("Please register first");
+document.addEventListener("DOMContentLoaded", function () {
+    // Log out: clear user when landing on index with #logout
+    if (window.location.hash === "#logout") {
+        localStorage.removeItem("user");
+        window.location.hash = "";
     }
-});
 
-// Отображение информации о пользователе
-function displayUserInfo(user) {
-    document.getElementById("userName").textContent = `Username: ${user.username}`;
-    document.getElementById("userEmail").textContent = `Email: ${user.email}`;
-}
+    const registrationForm = document.getElementById("registrationForm");
+    const loginForm = document.getElementById("loginForm");
 
-// Функция для получения прогресса пользователя (зданий)
-function fetchUserProgress(userId) {
-    fetch(`http://localhost:8080/progress/${userId}`)
-    .then(response => response.json())
-    .then(progressData => {
-        displayBuildings(progressData);
-    })
-    .catch(error => console.error('Error fetching progress:', error));
-}
+    // ----- Auth tabs (index page) -----
+    const authTabs = document.querySelectorAll(".auth-tab");
+    const loginPanel = document.getElementById("login-panel");
+    const registerPanel = document.getElementById("register-panel");
 
-// Отображение зданий на странице
-function displayBuildings(progressData) {
+    if (authTabs.length) {
+        authTabs.forEach((tab) => {
+            tab.addEventListener("click", function () {
+                const target = this.getAttribute("data-tab");
+                authTabs.forEach((t) => t.classList.remove("active"));
+                this.classList.add("active");
+                if (target === "login") {
+                    loginPanel.classList.add("active");
+                    registerPanel.classList.remove("active");
+                } else {
+                    registerPanel.classList.add("active");
+                    loginPanel.classList.remove("active");
+                }
+            });
+        });
+    }
+
+    // ----- Registration (index + register page) -----
+    if (registrationForm) {
+        registrationForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const errEl = document.getElementById("registrationError");
+            if (errEl) errEl.textContent = "";
+
+            const username = document.getElementById("username").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            fetch(`${API_BASE}/user`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, email, password }),
+            })
+                .then((response) => {
+                    if (!response.ok) return response.json().then((d) => Promise.reject(d));
+                    return response.json();
+                })
+                .then((data) => {
+                    localStorage.setItem("user", JSON.stringify(data));
+                    window.location.href = "profile.html";
+                })
+                .catch((err) => {
+                    const msg = err && err.error ? err.error : "Registration failed. Try again.";
+                    if (errEl) errEl.textContent = msg;
+                });
+        });
+    }
+
+    // ----- Login (index page; backend has no /login — use GET /users + match) -----
+    if (loginForm) {
+        loginForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const errEl = document.getElementById("loginError");
+            if (errEl) errEl.textContent = "";
+
+            const email = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value;
+
+            fetch(`${API_BASE}/users`)
+                .then((response) => {
+                    if (!response.ok) throw new Error("Login failed");
+                    return response.json();
+                })
+                .then((users) => {
+                    const user = users.find((u) => u.email === email && u.password === password);
+                    if (!user) {
+                        if (errEl) errEl.textContent = "Invalid email or password.";
+                        return;
+                    }
+                    localStorage.setItem("user", JSON.stringify(user));
+                    window.location.href = "profile.html";
+                })
+                .catch(() => {
+                    if (errEl) errEl.textContent = "Could not connect. Try again.";
+                });
+        });
+    }
+
+    // ----- Profile page only -----
+    const userInfo = document.getElementById("userInfo");
     const buildingsContainer = document.getElementById("buildingsContainer");
-    buildingsContainer.innerHTML = '';  // Очищаем контейнер
 
-    progressData.forEach(progress => {
-        const buildingElement = document.createElement('div');
-        buildingElement.classList.add('building');
-        
-        // Если здание посещено, добавляем класс 'visited'
-        if (progress.visited) {
-            buildingElement.classList.add('visited');
+    if (userInfo && buildingsContainer) {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user) {
+            window.location.href = "index.html";
+            return;
         }
 
-        // Добавляем обработчик для клика на здание
-        buildingElement.addEventListener("click", () => markBuildingAsVisited(progress.building_id, progress.user_id));
+        displayUserInfo(user);
+        fetchUserProgress(user.id);
+    }
 
-        buildingsContainer.appendChild(buildingElement);
-    });
-}
+    function displayUserInfo(user) {
+        const nameEl = document.getElementById("userName");
+        const emailEl = document.getElementById("userEmail");
+        if (nameEl) nameEl.textContent = user.username || "User";
+        if (emailEl) emailEl.textContent = user.email || "";
+    }
 
-// Отметить здание как посещенное
-function markBuildingAsVisited(buildingId, userId) {
-    fetch(`http://localhost:8080/progress/${userId}/${buildingId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ visited: true })
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert('Building marked as visited!');
-        fetchUserProgress(userId);  // Обновляем прогресс
-    })
-    .catch(error => console.error('Error marking building as visited:', error));
-}
+    function fetchUserProgress(userId) {
+        Promise.all([
+            fetch(`${API_BASE}/progress/${userId}`).then((r) => r.json()),
+            fetch(`${API_BASE}/buildings`).then((r) => r.json()),
+        ])
+            .then(([progressData, buildingsData]) => {
+                displayBuildings(progressData || [], buildingsData || []);
+            })
+            .catch((error) => console.error("Error fetching progress or buildings:", error));
+    }
+
+    function displayBuildings(progressData, buildingsData) {
+        if (!buildingsContainer) return;
+        buildingsContainer.innerHTML = "";
+
+        const buildingsList = buildingsData || [];
+        const buildingById = buildingsList.reduce((acc, b) => {
+            acc[b.id] = b;
+            return acc;
+        }, {});
+
+        // Sort progress by building order so the list never jumps
+        const progressSorted = (progressData || []).slice().sort(
+            (a, b) => a.building_id - b.building_id
+        );
+
+        progressSorted.forEach((progress) => {
+            const building = buildingById[progress.building_id];
+            const name = building ? building.name : `Building #${progress.building_id}`;
+            const isVisited = !!progress.flag;
+
+            const card = document.createElement("div");
+            card.className = "building-card";
+
+            const el = document.createElement("div");
+            el.className = "building" + (isVisited ? " visited" : "");
+            el.title = isVisited ? "Visited" : "Mark as visited";
+            if (!isVisited) {
+                el.addEventListener("click", () => markBuildingAsVisited(progress.building_id, progress.user_id));
+            }
+
+            const label = document.createElement("span");
+            label.className = "building-name";
+            label.textContent = name;
+
+            card.appendChild(el);
+            card.appendChild(label);
+            buildingsContainer.appendChild(card);
+        });
+    }
+
+    function markBuildingAsVisited(buildingId, userId) {
+        fetch(`${API_BASE}/progress/${userId}/${buildingId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ flag: true }),
+        })
+            .then((response) => response.json())
+            .then(() => {
+                fetchUserProgress(userId);
+            })
+            .catch((error) => console.error("Error marking building as visited:", error));
+    }
+});

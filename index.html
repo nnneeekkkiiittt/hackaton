@@ -3,32 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
+    <title>Explore — Discover & Track</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
-<body>
-    <!-- Форма регистрации -->
-    <section id="registration">
-        <h2>Register New User</h2>
-        <form id="registrationForm">
-            <input type="text" id="username" placeholder="Username" required /><br>
-            <input type="email" id="email" placeholder="Email" required /><br>
-            <input type="password" id="password" placeholder="Password" required /><br>
-            <button type="submit">Register</button>
-        </form>
-    </section>
+<body class="page-landing">
+    <header class="header">
+        <a href="index.html" class="logo">ФинКод Нижнего</a>
+        <nav class="nav">
+            <a href="index.html#auth" class="nav-link">Авторизоваться</a>
+            <a href="register.html" class="nav-link nav-link-cta">Зарегистрироваться</a>
+        </nav>
+    </header>
 
-    <!-- Информация о пользователе -->
-    <div id="userInfo">
-        <span id="userName"></span><br>
-        <span id="userEmail"></span>
-    </div>
+    <main>
+        <section class="hero">
+            <div class="hero-bg"></div>
+            <div class="hero-content">
+                <h1 class="hero-title">Пройдите уникальную экскурсию по ключевым местам Нижнего Новгорода!</h1>
+                <p class="hero-subtitle">Зарегистрируйтесь или войдите в свой аккаунт:</p>
+                <div class="hero-actions">
+                </div>
+            </div>
+        </section>
 
-    <!-- Список зданий -->
-    <div id="buildingsContainer">
-        <!-- Здания будут динамически добавляться сюда -->
-    </div>
+        <section id="auth" class="auth-section">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <button type="button" class="auth-tab active" data-tab="login" aria-selected="true">Авторизация</button>
+                    <button type="button" class="auth-tab" data-tab="register" aria-selected="false">Регистрация</button>
+                </div>
 
-    <script src="script.js"></script> <!-- Подключаем скрипты -->
+                <div id="login-panel" class="auth-panel active">
+                    <h2 class="auth-heading">Добро пожаловать!</h2>
+                    <form id="loginForm" class="auth-form">
+                        <label class="label" for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" class="input" placeholder="you@example.com" required autocomplete="email">
+                        <label class="label" for="loginPassword">Пароль</label>
+                        <input type="password" id="loginPassword" class="input" placeholder="••••••••" required autocomplete="current-password">
+                        <p id="loginError" class="form-error" aria-live="polite"></p>
+                        <button type="submit" class="btn btn-primary btn-block">Войти в аккаунт</button>
+                    </form>
+                </div>
+
+                <div id="register-panel" class="auth-panel">
+                    <h2 class="auth-heading">Создать аккаунт</h2>
+                    <form id="registrationForm" class="auth-form">
+                        <label class="label" for="username">Ваше имя</label>
+                        <input type="text" id="username" class="input" placeholder="Введите имя" required autocomplete="username">
+                        <label class="label" for="email">Email</label>
+                        <input type="email" id="email" class="input" placeholder="you@example.com" required autocomplete="email">
+                        <label class="label" for="password">Пароль</label>
+                        <input type="password" id="password" class="input" placeholder="••••••••" required autocomplete="new-password">
+                        <p id="registrationError" class="form-error" aria-live="polite"></p>
+                        <button type="submit" class="btn btn-primary btn-block">Регистрация</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Исследуйте финансовые точки Нижнего Новгорода! Продукт от команды "Прорвемся".</p>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
