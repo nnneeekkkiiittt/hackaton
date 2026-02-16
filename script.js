@@ -130,39 +130,53 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!buildingsContainer) return;
         buildingsContainer.innerHTML = "";
 
-        const buildingsList = buildingsData || [];
-        const buildingById = buildingsList.reduce((acc, b) => {
-            acc[b.id] = b;
+        const buildingsList = (buildingsData || []).slice().sort((a, b) => a.id - b.id);
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userId = user ? user.id : null;
+
+        // Map: building_id -> progress (so we know which are visited)
+        const progressByBuilding = (progressData || []).reduce((acc, p) => {
+            acc[p.building_id] = p;
             return acc;
         }, {});
 
-        // Sort progress by building order so the list never jumps
-        const progressSorted = (progressData || []).slice().sort(
-            (a, b) => a.building_id - b.building_id
-        );
-
-        progressSorted.forEach((progress) => {
-            const building = buildingById[progress.building_id];
-            const name = building ? building.name : `Building #${progress.building_id}`;
-            const isVisited = !!progress.flag;
+        // Show every building from the DB; use progress only to mark visited
+        buildingsList.forEach((building, index) => {
+            const progress = progressByBuilding[building.id];
+            const isVisited = progress ? !!progress.flag : false;
+            const name = building.name || `Building #${building.id}`;
 
             const card = document.createElement("div");
             card.className = "building-card";
 
+            const step = document.createElement("span");
+            step.className = "building-step";
+            step.textContent = index + 1;
+
             const el = document.createElement("div");
             el.className = "building" + (isVisited ? " visited" : "");
             el.title = isVisited ? "Visited" : "Mark as visited";
-            if (!isVisited) {
-                el.addEventListener("click", () => markBuildingAsVisited(progress.building_id, progress.user_id));
+            if (!isVisited && userId) {
+                el.addEventListener("click", () => markBuildingAsVisited(building.id, userId));
             }
 
-            const label = document.createElement("span");
+            const label = document.createElement("a");
             label.className = "building-name";
+            label.href = `building.html?id=${building.id}`;
             label.textContent = name;
 
+            card.appendChild(step);
             card.appendChild(el);
             card.appendChild(label);
             buildingsContainer.appendChild(card);
+
+            // Route pointer to next stop (arrow between cards)
+            if (index < buildingsList.length - 1) {
+                const pointer = document.createElement("div");
+                pointer.className = "route-pointer";
+                pointer.setAttribute("aria-hidden", "true");
+                buildingsContainer.appendChild(pointer);
+            }
         });
     }
 

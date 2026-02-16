@@ -23,9 +23,9 @@ func main() {
 		log.Fatalf("Error migrating database: %v", err)
 	}
 
-	//маршруты
 	r.GET("/buildings", handlers.GetBuildings)
-
+	
+	r.GET("/building/:id/description", handlers.GetBuildingDescription)
 	r.GET("/building/:id", handlers.GetBuildingByID)
 
 	r.POST("/building", handlers.CreateNewBuilding)

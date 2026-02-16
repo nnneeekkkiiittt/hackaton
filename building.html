@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Здание — ФинКод Нижнего</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="page-building">
+    <header class="header">
+        <a href="index.html" class="logo">ФинКод Нижнего</a>
+        <nav class="nav">
+            <a href="profile.html" class="nav-link">Маршрут</a>
+        </nav>
+    </header>
+
+    <main class="building-main">
+        <article class="building-article">
+            <h1 id="buildingName" class="building-page-title"></h1>
+            <div id="buildingDescription" class="building-description"></div>
+            <div id="buildingMap" class="building-map" aria-label="Карта расположения здания"></div>
+            <p id="buildingError" class="form-error" aria-live="polite"></p>
+        </article>
+    </main>
+
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=88912fb0-2da4-47e9-acd8-c27f78781ed7&lang=ru_RU" type="text/javascript"></script>
+    <script src="building.js"></script>
+</body>
+</html>
