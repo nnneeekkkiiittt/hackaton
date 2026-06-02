@@ -57,3 +57,21 @@ func GetUserProgress(c *gin.Context) {
 
 	c.JSON(http.StatusOK, progress)
 }
+
+func ResetUserProgress(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "user not found"})
+		return
+	}
+
+	result := db.DB.Where("user_id = ?", userID).Delete(&models.Progress{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "progress reset successfully",
+	})
+}

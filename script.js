@@ -96,6 +96,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // ----- Profile page only -----
     const userInfo = document.getElementById("userInfo");
     const buildingsContainer = document.getElementById("buildingsContainer");
+    const routePicker = document.getElementById("routePicker");
+    const routesContainer = document.getElementById("routesContainer");
+    const routeError = document.getElementById("routeError");
+    const routeSummary = document.getElementById("routeSummary");
+    const currentRouteName = document.getElementById("currentRouteName");
+    const switchRouteBtn = document.getElementById("switchRouteBtn");
 
     if (userInfo && buildingsContainer) {
         const user = JSON.parse(localStorage.getItem("user"));
@@ -105,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         displayUserInfo(user);
-        fetchUserProgress(user.id);
+        initializeProfile(user);
     }
 
     function displayUserInfo(user) {
@@ -116,11 +122,26 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function fetchUserProgress(userId) {
+        const selectedRouteId = getSelectedRouteId(userId);
+        if (!selectedRouteId) {
+            displayBuildings([], []);
+            return;
+        }
+
         Promise.all([
             fetch(`${API_BASE}/progress/${userId}`).then((r) => r.json()),
-            fetch(`${API_BASE}/buildings`).then((r) => r.json()),
+            fetch(`${API_BASE}/route/${selectedRouteId}/buildings`).then((r) => r.json()),
         ])
             .then(([progressData, buildingsData]) => {
+                // Backward-compatibility: existing buildings may still have route_id = 0
+                // after routes were introduced. Show all buildings instead of empty state.
+                if (Array.isArray(buildingsData) && buildingsData.length === 0) {
+                    return fetch(`${API_BASE}/buildings`)
+                        .then((r) => r.json())
+                        .then((allBuildings) => {
+                            displayBuildings(progressData || [], allBuildings || []);
+                        });
+                }
                 displayBuildings(progressData || [], buildingsData || []);
             })
             .catch((error) => console.error("Error fetching progress or buildings:", error));
@@ -155,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const el = document.createElement("div");
             el.className = "building" + (isVisited ? " visited" : "");
-            el.title = isVisited ? "Visited" : "Mark as visited";
+            el.title = isVisited ? "Visited" : "Пометить посещенной";
             if (!isVisited && userId) {
                 el.addEventListener("click", () => markBuildingAsVisited(building.id, userId));
             }
@@ -191,5 +212,79 @@ document.addEventListener("DOMContentLoaded", function () {
                 fetchUserProgress(userId);
             })
             .catch((error) => console.error("Error marking building as visited:", error));
+    }
+
+    function initializeProfile(user) {
+        if (switchRouteBtn) {
+            switchRouteBtn.addEventListener("click", function () {
+                if (routePicker) routePicker.hidden = false;
+                if (routeSummary) routeSummary.hidden = true;
+                if (buildingsContainer) buildingsContainer.innerHTML = "";
+            });
+        }
+
+        fetch(`${API_BASE}/routes`)
+            .then((response) => {
+                if (!response.ok) throw new Error("Could not load routes");
+                return response.json();
+            })
+            .then((routes) => {
+                renderRoutes(routes || [], user.id);
+                const selected = getSelectedRouteId(user.id);
+                if (selected && routes.some((r) => Number(r.id) === Number(selected))) {
+                    selectRoute(user.id, selected, routes);
+                } else {
+                    if (routePicker) routePicker.hidden = false;
+                    if (routeSummary) routeSummary.hidden = true;
+                }
+            })
+            .catch(() => {
+                if (routeError) routeError.textContent = "Не удалось загрузить маршруты.";
+            });
+    }
+
+    function renderRoutes(routes, userId) {
+        if (!routesContainer) return;
+        routesContainer.innerHTML = "";
+
+        routes.forEach((route) => {
+            const card = document.createElement("button");
+            card.type = "button";
+            card.className = "route-card";
+
+            const title = document.createElement("h3");
+            title.textContent = route.name || `Маршрут #${route.id}`;
+
+            const desc = document.createElement("p");
+            desc.textContent = route.description || "Открыть этот маршрут";
+
+            card.appendChild(title);
+            card.appendChild(desc);
+            card.addEventListener("click", function () {
+                selectRoute(userId, route.id, routes);
+            });
+
+            routesContainer.appendChild(card);
+        });
+    }
+
+    function selectRoute(userId, routeId, routes) {
+        saveSelectedRouteId(userId, routeId);
+        const selectedRoute = routes.find((r) => Number(r.id) === Number(routeId));
+        if (currentRouteName) {
+            currentRouteName.textContent = selectedRoute ? selectedRoute.name : `Маршрут #${routeId}`;
+        }
+        if (routePicker) routePicker.hidden = true;
+        if (routeSummary) routeSummary.hidden = false;
+        if (routeError) routeError.textContent = "";
+        fetchUserProgress(userId);
+    }
+
+    function getSelectedRouteId(userId) {
+        return localStorage.getItem(`selectedRouteId_${userId}`);
+    }
+
+    function saveSelectedRouteId(userId, routeId) {
+        localStorage.setItem(`selectedRouteId_${userId}`, String(routeId));
     }
 });

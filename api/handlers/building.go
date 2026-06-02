@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,12 +47,11 @@ func GetBuildingByID(c *gin.Context) {
 	c.JSON(http.StatusOK, building)
 }
 
-
 func pkgDir() string {
 	// Resolve relative to this source file so it works regardless of working directory
 	_, file, _, _ := runtime.Caller(0)
-	dir := filepath.Dir(file)                     // .../api/handlers
-	dir = filepath.Join(dir, "..", "..", "pkg")   // .../pkg (project root / pkg)
+	dir := filepath.Dir(file)                   // .../api/handlers
+	dir = filepath.Join(dir, "..", "..", "pkg") // .../pkg (project root / pkg)
 	if abs, err := filepath.Abs(dir); err == nil {
 		dir = abs
 	}
@@ -72,7 +70,6 @@ func pkgDir() string {
 	return filepath.Join(wd, "pkg")
 }
 
-
 func GetBuildingDescription(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -87,9 +84,6 @@ func GetBuildingDescription(c *gin.Context) {
 	dir := pkgDir()
 	// Derive .txt filename from picture filename (e.g. al_dv_bank.jpg -> al_dv_bank.txt)
 	var txtName string
-	if building.Picture != "" {
-		txtName = strings.TrimSuffix(building.Picture, filepath.Ext(building.Picture)) + ".txt"
-	}
 	if txtName != "" {
 		path := filepath.Join(dir, filepath.Base(txtName))
 		if data, err := os.ReadFile(path); err == nil {

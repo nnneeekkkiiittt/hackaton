@@ -192,6 +192,11 @@ a:hover {
     width: 100%;
 }
 
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+
 /* ===== Auth section (index) ===== */
 .auth-section {
     padding: 2rem 1.5rem 4rem;
@@ -387,6 +392,62 @@ a:hover {
 .page-profile #buildingsContainer {
     margin-top: 3rem;
     padding: 0 1.5rem 2rem;
+}
+
+.route-picker {
+    max-width: 900px;
+    width: 100%;
+    margin: 2rem auto 0;
+    padding: 0 1.5rem;
+}
+
+.route-picker-title {
+    margin: 0 0 0.4rem;
+    font-size: 1.4rem;
+}
+
+.route-picker-subtitle {
+    margin: 0 0 1rem;
+    color: var(--text-muted);
+}
+
+.routes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.9rem;
+}
+
+.route-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    cursor: pointer;
+    transition: border-color var(--transition), transform var(--transition);
+}
+
+.route-card:hover {
+    border-color: var(--accent-dim);
+    transform: translateY(-1px);
+}
+
+.route-card h3 {
+    margin: 0 0 0.45rem;
+    font-size: 1rem;
+}
+
+.route-card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.route-summary {
+    max-width: 900px;
+    width: 100%;
+    margin: 1.25rem auto 0;
+    padding: 0 1.5rem;
+    color: var(--text-muted);
 }
 
 #buildingsContainer {

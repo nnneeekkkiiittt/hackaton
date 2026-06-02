@@ -11,13 +11,25 @@
 </head>
 <body class="page-profile">
     <header class="header">
-        <a href="index.html" class="logo">ФинКод Нижнего</a>
         <div id="userInfo" class="profile-user-info">
             <span id="userName"></span>
             <span id="userEmail"></span>
+            <button id="switchRouteBtn" class="btn btn-ghost btn-sm" type="button">Сменить маршрут</button>
             <a href="index.html#logout" class="nav-link">Выйти</a>
         </div>
     </header>
+
+    <section id="routePicker" class="route-picker">
+        <h2 class="route-picker-title">Выберите маршрут</h2>
+        <p class="route-picker-subtitle">Сначала выберите маршрут, после этого откроются здания этого маршрута.</p>
+        <div id="routesContainer" class="routes-grid"></div>
+        <p id="routeError" class="form-error" aria-live="polite"></p>
+    </section>
+
+    <section id="routeSummary" class="route-summary" hidden>
+        <span>Текущий маршрут:</span>
+        <strong id="currentRouteName"></strong>
+    </section>
 
     <!-- Список зданий -->
     <div id="buildingsContainer">
